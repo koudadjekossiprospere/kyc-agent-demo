@@ -1,0 +1,79 @@
+/* Same visual language as the Streamlit console, so screenshots and the live demo match. */
+:root {
+  --bg: #FFFFFF; --side: #F0F2F6; --ink: #31333F; --muted: #6B6E7A; --line: #E2E4EA; --primary: #FF4B4B;
+  --field: #F0F2F6; --code: #F7F8FA; --info-bg: #E8F1FB; --info: #0F4C81; --ok-bg: #E7F6EC; --ok: #177233;
+  --warn-bg: #FFF8DB; --warn: #8A6100; --err-bg: #FDECEC; --err: #A12A2A;
+  --g: #177233; --g-bg: rgba(33, 195, 84, .12); --o: #9A5B00; --o-bg: rgba(255, 164, 33, .16);
+  --r: #B42323; --r-bg: rgba(255, 75, 75, .12); --v: #6236B8; --v-bg: rgba(128, 61, 245, .12);
+  --sans: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
+  --mono: "Source Code Pro", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E1117; --side: #262730; --ink: #FAFAFA; --muted: #A3A8B8; --line: #31333F; --field: #262730;
+    --code: #1A1C24; --info-bg: #172D43; --info: #C7E1FF; --ok-bg: #173928; --ok: #9BE7B4; --warn-bg: #3A3216;
+    --warn: #FFE08A; --err-bg: #3E1B1B; --err: #FFB3B3; --g: #7FE0A0; --g-bg: rgba(33, 195, 84, .2);
+    --o: #FFC86B; --o-bg: rgba(255, 164, 33, .2); --r: #FF9C9C; --r-bg: rgba(255, 75, 75, .2);
+    --v: #C7AFFF; --v-bg: rgba(128, 61, 245, .25); color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--sans); }
+#app { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; }
+aside { background: var(--side); padding: 28px 20px 40px; font-size: 15px; }
+main { padding: 48px max(16px, 5vw) 64px; max-width: 1100px; width: 100%; min-width: 0; }
+h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.15; margin: 0 0 18px; font-weight: 700; }
+h3 { font-size: 24px; margin: 28px 0 12px; font-weight: 700; }
+p { margin: 0 0 12px; }
+code { font: 400 13px var(--mono); background: var(--code); border-radius: 4px; padding: 1px 5px; color: var(--g); }
+pre { font: 400 13px/1.55 var(--mono); background: var(--code); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 6px 0 14px; white-space: pre; }
+.caption { color: var(--muted); font-size: 14px; }
+.badge { display: inline-block; font-size: 14px; border-radius: 6px; padding: 0 6px; line-height: 1.6; }
+.badge.green { color: var(--g); background: var(--g-bg); } .badge.orange { color: var(--o); background: var(--o-bg); }
+.badge.red { color: var(--r); background: var(--r-bg); } .badge.violet { color: var(--v); background: var(--v-bg); }
+.alert { border-radius: 8px; padding: 14px 16px; margin: 8px 0 16px; }
+.alert.info { background: var(--info-bg); color: var(--info); } .alert.ok { background: var(--ok-bg); color: var(--ok); }
+.alert.warn { background: var(--warn-bg); color: var(--warn); } .alert.err { background: var(--err-bg); color: var(--err); }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 24px; margin: 18px 0 26px; }
+.metric span { display: block; font-size: 14px; } .metric b { display: block; font-size: 34px; font-weight: 400; line-height: 1.3; }
+.tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); margin: 8px 0 18px; overflow-x: auto; }
+.tabs button { border: 0; background: none; color: var(--ink); font: 400 15px var(--sans); padding: 8px 0; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); }
+label.field { display: block; font-size: 14px; margin: 10px 0 4px; }
+select, input[type="text"], textarea { width: 100%; font: 400 15px var(--sans); color: var(--ink); background: var(--field); border: 1px solid transparent; border-radius: 8px; padding: 9px 12px; }
+aside input[type="text"] { background: var(--bg); }
+textarea { min-height: 96px; resize: vertical; }
+select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+button.btn { font: 400 15px var(--sans); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+button.btn:hover { border-color: var(--primary); color: var(--primary); }
+button.btn.wide { width: 100%; }
+.form { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.form .actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; justify-items: start; }
+aside .form { background: transparent; }
+fieldset { border: 0; padding: 0; margin: 14px 0; }
+legend { font-size: 14px; margin-bottom: 4px; }
+.radio { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; cursor: pointer; }
+.radio input { accent-color: var(--primary); margin-top: 5px; }
+.row { display: flex; gap: 18px; flex-wrap: wrap; }
+.switch { display: flex; gap: 10px; align-items: center; cursor: pointer; margin: 16px 0 2px; }
+.switch input { accent-color: var(--primary); width: 18px; height: 18px; }
+details.policy { border: 1px solid var(--line); border-radius: 8px; margin-top: 16px; background: var(--bg); }
+details.policy summary { cursor: pointer; padding: 10px 12px; }
+details.policy > div { padding: 0 12px 12px; font-size: 14px; }
+details.policy h3 { font-size: 18px; } details.policy h4 { font-size: 16px; margin: 14px 0 6px; }
+.finding { margin: 0 0 14px; }
+.table { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; margin: 6px 0 22px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 400; background: var(--code); }
+tr:last-child td { border-bottom: 0; }
+.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 20px; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; }
+footer { margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 900px) {
+  #app { grid-template-columns: minmax(0, 1fr); }
+  aside { padding: 20px max(16px, env(safe-area-inset-left, 0px)); }
+  main { padding: 28px 16px 48px; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form .actions { grid-template-columns: minmax(0, 1fr); }
+}
