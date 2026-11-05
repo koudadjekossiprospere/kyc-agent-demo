@@ -5,7 +5,9 @@ window.KYC_CONFIG = {
   contactForm: null,
   // Address of the demo's relay (relay/, docs/relais-sans-cle.md), for live reviews without a visitor key.
   // Example: relay: "https://kyc-demo-relay.<your subdomain>.workers.dev",
-  relay: null,
+  relay: "https://kyc-demo-relay.kyc-demo-relay.workers.dev",
+  // true once the relay also has a free open model (GROQ_API_KEY), used when the Claude cap is reached.
+  relayOpenModel: false,
   source: "https://github.com/koudadjekossiprospere/kyc-onboarding-agent",
   author: { name: "Koudadje Kossi Prospere", linkedin: "https://www.linkedin.com/in/prosp%C3%A8re-koudadje" },
 };

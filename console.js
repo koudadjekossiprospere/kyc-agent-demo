@@ -24,6 +24,8 @@
     m_free_t: ["IA en direct, sans clé", "Live AI, no key"], m_free_tag: ["Recommandé · rien à installer", "Recommended · nothing to install"],
     m_free_p: ["Cliquez sur « Analyser » : c'est tout. L'analyse tourne avec Claude Opus 5.5, offert par l'auteur de la démo dans la limite d'un budget mensuel, puis avec un modèle ouvert gratuit (gpt-oss-120b) quand ce budget est atteint. Les données fictives du dossier passent par le relais de la démo vers Anthropic ou Groq.",
       "Click Review: that is all. The review runs with Claude Opus 5.5, offered by the demo's author within a monthly budget, then with a free open model (gpt-oss-120b) once that budget is spent. The case's fictional data goes through the demo's relay to Anthropic or Groq."],
+    m_free_p_claude: ["Cliquez sur « Analyser » : c'est tout. L'analyse tourne avec Claude Opus 5.5, offerte par l'auteur de la démo dans la limite d'un nombre d'analyses par jour. Les données fictives du dossier passent par le relais de la démo vers Anthropic.",
+      "Click Review: that is all. The review runs with Claude Opus 5.5, offered by the demo's author within a number of reviews per day. The case's fictional data goes through the demo's relay to Anthropic."],
     free_cost: ["Gratuit pour vous, environ 15 secondes.", "Free for you, about 15 seconds."],
     free_fallback: ["Le budget Claude du mois est épuisé : l'analyse passe au modèle ouvert gratuit.", "This month's Claude budget is spent: the review moves to the free open model."],
     open_name: ["le modèle ouvert gratuit", "the free open model"],
@@ -308,6 +310,7 @@
     e_ollama: ["Impossible de joindre Ollama à cette adresse. Vérifiez qu'il tourne avec OLLAMA_ORIGINS={o}, et autorisez le navigateur à accéder à votre ordinateur s'il vous le demande.", "Cannot reach Ollama at this address. Check it runs with OLLAMA_ORIGINS={o}, and allow the browser to access your computer if it asks."],
     e_unreadable: ["Document illisible.", "Unreadable document."], e_api: ["Erreur de l'API : {m}", "API error: {m}"],
     e_busy: ["Beaucoup d'essais en ce moment : réessayez dans une minute.", "Many people are trying right now: try again in a minute."],
+    e_daily: ["Les analyses offertes aujourd'hui sont toutes utilisées. Revenez demain, ou utilisez votre propre clé Claude. Les résultats enregistrés restent consultables.", "Today's free reviews are all used. Come back tomorrow, or use your own Claude key. The recorded results are still there."],
     e_unavailable: ["L'IA en direct n'est pas disponible pour l'instant. Les résultats enregistrés restent consultables, et vous pouvez utiliser votre clé Claude ou votre Ollama.", "The live AI is not available right now. The recorded results are still there, and you can use your Claude key or your Ollama."],
     e_refused: ["Le relais de la démo a refusé la demande.", "The demo's relay refused the request."],
     e_too_large: ["Fichier trop lourd pour le relais : 2,5 Mo au plus pour un PDF.", "File too large for the relay: 2.5 MB at most for a PDF."],
@@ -549,7 +552,7 @@
     const card = (m, tone) => `<div class="card mode${S.mode === m ? " selected" : ""}">
         <label class="mode-label"><input type="radio" name="mode" value="${m}"${S.mode === m ? " checked" : ""}>
         <span class="stack-sm"><span class="row gap-sm flexwrap"><span class="mode-title">${t(`m_${key(m)}_t`)}</span>${pill(tone, null, t(tag(m)), " small")}</span>
-        <span class="muted-strong">${t(`m_${key(m)}_p`)}</span></span></label>
+        <span class="muted-strong">${t(m === "free" && !CFG.relayOpenModel ? "m_free_p_claude" : `m_${key(m)}_p`)}</span></span></label>
         ${S.mode === m && m === "claude" ? claudeFields() : ""}${S.mode === m && m === "ollama" ? ollamaFields() : ""}</div>`;
     const cards = CFG.relay ? card("free", "ok") + card("recorded", "neutral") + card("claude", "info") + card("ollama", "neutral")
       : card("recorded", "ok") + card("claude", "info") + card("ollama", "neutral");
@@ -1051,6 +1054,7 @@
     if (m === "key") return tx("e_key");
     if (m === "rate") return tx(S.mode === "free" ? "e_busy" : "e_rate");
     if (m === "unavailable") return tx("e_unavailable");
+    if (m === "daily") return tx("e_daily");
     if (m === "refused") return tx("e_refused");
     if (m === "too_large") return tx("e_too_large");
     if (m === "network") return tx("e_network");
@@ -1076,6 +1080,7 @@
       try { r = await run(); } catch (e) {
         // The author's Claude budget for the month is spent: the same review goes to the free open model.
         if (!(S.mode === "free" && !S.claudeOut && e.message === "unavailable")) throw e;
+        if (!CFG.relayOpenModel) throw new KYC.ProviderError("daily"); // no open model behind the relay
         S.claudeOut = true; S.running.steps = []; toast(tx("free_fallback")); r = await run();
       }
       S.live[id] = r;

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- No inline script or style can run, and the page can only talk to Anthropic, the visitor's own computer (Ollama)
      and the optional contact form: an injected text cannot load code or send data anywhere else. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; connect-src 'self' https://api.anthropic.com http://localhost:* http://127.0.0.1:* https://docs.google.com; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; connect-src 'self' https://kyc-demo-relay.kyc-demo-relay.workers.dev https://api.anthropic.com http://localhost:* http://127.0.0.1:* https://docs.google.com; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Agent KYC · démo</title>
 <meta name="description" content="Démo d'un agent d'IA qui examine les ouvertures de compte bancaire (KYC) sous supervision humaine. Dossiers fictifs, règles modifiables, analyse en direct avec votre propre clé.">
@@ -14,8 +14,8 @@
 </head>
 <body>
 <div id="app"><noscript>Cette démo a besoin de JavaScript.</noscript></div>
-<script src="config.js?v=e4d2ea9b92"></script>
+<script src="config.js?v=5bd7f224ca"></script>
 <script src="engine.js?v=090a125c47"></script>
-<script src="console.js?v=a52845937a"></script>
+<script src="console.js?v=aa7b8239d0"></script>
 </body>
 </html>
