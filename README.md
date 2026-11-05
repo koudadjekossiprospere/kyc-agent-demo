@@ -12,11 +12,11 @@ A web demo of an AI agent that reviews bank account openings (KYC) under human s
   if all six checks pass in the code's own results, and any text addressed to the AI escalates the case.
 
 Everything shown is fictional: applicants, documents (marked SPECIMEN) and watchlist entries. Identity verification
-by a certified provider (PVID) is simulated. This repository holds only the published page; the agent's source code
-is private.
+by a certified provider (PVID) is simulated. This repository holds only the published page. The agent's source
+code, its tests and the recorded results are at https://github.com/koudadjekossiprospere/kyc-onboarding-agent.
 
 ---
 
 Démo publique d'un agent d'IA qui examine les ouvertures de compte (KYC) sous supervision humaine, sur des dossiers
 fictifs : résultats enregistrés, analyse en direct avec votre propre clé Claude ou votre Ollama, règles modifiables.
-Le code source de l'agent est privé.
+Le code source de l'agent est ouvert : https://github.com/koudadjekossiprospere/kyc-onboarding-agent

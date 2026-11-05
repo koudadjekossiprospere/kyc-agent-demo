@@ -6,7 +6,7 @@
   const CFG = window.KYC_CONFIG || {};
   const STORE = "kyc-demo-v2";
   const HUMAN_ACTIONS = ["approve", "request_documents", "reject"];
-  const LIMITS = { cases: 20, rules: 40, ruleChars: 2000, ruleFileChars: 20000, fileBytes: 5 * 1024 * 1024, files: 4, comment: 1000 };
+  const LIMITS = { cases: 20, rules: 40, ruleChars: 2000, ruleFileChars: 20000, fileBytes: 5 * 1024 * 1024, relayPdfBytes: 2.5 * 1024 * 1024, files: 4, comment: 1000 };
   const OLLAMA_URL = /^http:\/\/(localhost|127\.0\.0\.1):\d{2,5}$/;
   const FILE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"];
   let D = null;
@@ -20,6 +20,13 @@
     nav_home: ["Accueil", "Home"], nav_queue: ["Mes dossiers", "My cases"], nav_new: ["Nouveau dossier", "New case"],
     nav_rules: ["Règles", "Rules"], nav_pilot: ["Pilotage", "Oversight"],
     mode_chip: ["IA : {m}", "AI: {m}"],
+    mode_free: ["en direct, sans clé", "live, no key"],
+    m_free_t: ["IA en direct, sans clé", "Live AI, no key"], m_free_tag: ["Recommandé · rien à installer", "Recommended · nothing to install"],
+    m_free_p: ["Cliquez sur « Analyser » : c'est tout. L'analyse tourne avec Claude Opus 5.5, offert par l'auteur de la démo dans la limite d'un budget mensuel, puis avec un modèle ouvert gratuit (gpt-oss-120b) quand ce budget est atteint. Les données fictives du dossier passent par le relais de la démo vers Anthropic ou Groq.",
+      "Click Review: that is all. The review runs with Claude Opus 5.5, offered by the demo's author within a monthly budget, then with a free open model (gpt-oss-120b) once that budget is spent. The case's fictional data goes through the demo's relay to Anthropic or Groq."],
+    free_cost: ["Gratuit pour vous, environ 15 secondes.", "Free for you, about 15 seconds."],
+    free_fallback: ["Le budget Claude du mois est épuisé : l'analyse passe au modèle ouvert gratuit.", "This month's Claude budget is spent: the review moves to the free open model."],
+    open_name: ["le modèle ouvert gratuit", "the free open model"],
     mode_recorded: ["résultats enregistrés", "recorded results"], mode_claude: ["ma clé Claude", "my Claude key"],
     mode_ollama: ["mon Ollama", "my Ollama"], connected: [", connectée", ", connected"],
     lang_switch: ["Langue : français. Passer en anglais", "Language: English. Switch to French"],
@@ -27,7 +34,7 @@
     blind_banner: ["Mode étude : l'avis de l'IA est masqué, et le temps passé sur chaque dossier est mesuré.", "Study mode: the AI's opinion is hidden and the time spent on each case is measured."],
     footer_1: ["Données 100 % fictives · pièces marquées SPECIMEN", "100% fictional data · documents marked SPECIMEN"],
     footer_2: ["Vérification d'identité (PVID) simulée", "Identity verification (PVID) simulated"],
-    footer_3: ["Code source privé", "Private source code"],
+    footer_3: ["Code source ouvert sur GitHub", "Open source code on GitHub"],
     footer_4: ["Inspiré du World Cloud Report – Financial Services 2026 de Capgemini", "Inspired by Capgemini's World Cloud Report – Financial Services 2026"],
     loading: ["Chargement…", "Loading…"],
     load_error: ["Les données de la démo n'ont pas pu être chargées.", "The demo data could not be loaded."],
@@ -64,6 +71,7 @@
     mode_title: ["Choisissez comment l'IA tourne", "Choose how the AI runs"],
     mode_sub: ["Vous pourrez changer à tout moment depuis la barre du haut.", "You can switch at any time from the top bar."],
     m_rec_t: ["Résultats enregistrés", "Recorded results"], m_rec_tag: ["Recommandé · sans clé", "Recommended · no key"],
+    m_rec_tag_relay: ["Instantané · sans analyse en direct", "Instant · no live review"],
     m_rec_p: ["Rejouez les vraies réponses des deux IA sur les dossiers de test. Gratuit et instantané. Si vous changez les règles, les 6 contrôles sont recalculés tout de suite ; seul l'avis rédigé par l'IA reste celui enregistré.",
       "Replay the two AIs' real answers on the test cases. Free and instant. If you change the rules, the 6 checks are recomputed at once; only the opinion written by the AI stays as recorded."],
     m_claude_t: ["Ma clé Claude", "My Claude key"], m_claude_tag: ["En direct", "Live"],
@@ -196,7 +204,7 @@
     upload_p: ["Images ou PDF, 5 Mo au plus, 4 fichiers au plus. Claude les lit et en extrait les champs ; le code vérifie ensuite la bande MRZ. Rien n'est envoyé à ce site : le dossier reste dans votre navigateur.",
       "Images or PDF, 5 MB at most, 4 files at most. Claude reads them and extracts the fields; the code then checks the MRZ. Nothing is sent to this site: the case stays in your browser."],
     upload_confirm: ["Je confirme que ces documents sont fictifs ou anonymisés : aucune vraie pièce d'identité, aucune donnée réelle.", "I confirm these documents are fictional or anonymised: no real ID document, no real data."],
-    choose_files: ["Choisir des fichiers", "Choose files"], upload_needs_claude: ["La lecture des pièces déposées demande le mode « Ma clé Claude », avec une clé vérifiée.", "Reading uploaded documents needs the My Claude key mode, with a verified key."],
+    choose_files: ["Choisir des fichiers", "Choose files"], upload_needs_claude: ["La lecture des pièces déposées demande Claude : le mode « sans clé » tant que le budget du mois n'est pas épuisé, ou votre clé Claude vérifiée.", "Reading uploaded documents needs Claude: the no-key mode while the month's budget lasts, or your verified Claude key."],
     reading: ["Lecture de {f} par Claude…", "Claude is reading {f}…"], read_done: ["{f} lu : {t}.", "{f} read: {t}."],
     bad_file: ["{f} : format non accepté (images ou PDF).", "{f}: format not accepted (images or PDF)."], big_file: ["{f} : plus de 5 Mo.", "{f}: more than 5 MB."],
     too_many_files: ["4 fichiers au plus par dossier.", "4 files at most per case."],
@@ -299,6 +307,10 @@
     e_network: ["Impossible de joindre l'API Anthropic : réseau coupé ou accès bloqué par le navigateur.", "Cannot reach the Anthropic API: network down or access blocked by the browser."],
     e_ollama: ["Impossible de joindre Ollama à cette adresse. Vérifiez qu'il tourne avec OLLAMA_ORIGINS={o}, et autorisez le navigateur à accéder à votre ordinateur s'il vous le demande.", "Cannot reach Ollama at this address. Check it runs with OLLAMA_ORIGINS={o}, and allow the browser to access your computer if it asks."],
     e_unreadable: ["Document illisible.", "Unreadable document."], e_api: ["Erreur de l'API : {m}", "API error: {m}"],
+    e_busy: ["Beaucoup d'essais en ce moment : réessayez dans une minute.", "Many people are trying right now: try again in a minute."],
+    e_unavailable: ["L'IA en direct n'est pas disponible pour l'instant. Les résultats enregistrés restent consultables, et vous pouvez utiliser votre clé Claude ou votre Ollama.", "The live AI is not available right now. The recorded results are still there, and you can use your Claude key or your Ollama."],
+    e_refused: ["Le relais de la démo a refusé la demande.", "The demo's relay refused the request."],
+    e_too_large: ["Fichier trop lourd pour le relais : 2,5 Mo au plus pour un PDF.", "File too large for the relay: 2.5 MB at most for a PDF."],
     storage_full: ["Le navigateur refuse d'enregistrer plus de données : vos derniers changements ne seront pas gardés.", "The browser refuses to store more data: your latest changes will not be kept."],
     rules_changed_detail: ["{n} changement(s)", "{n} change(s)"],
   };
@@ -377,7 +389,7 @@
 
   // ---------- state ----------
   const S = {
-    lang: "fr", mode: "recorded", key: "", keyOk: false, ollama: { url: "http://localhost:11434", model: "qwen3.5:9b" }, ollamaOk: false,
+    lang: "fr", mode: CFG.relay ? "free" : "recorded", claudeOut: false, key: "", keyOk: false, ollama: { url: "http://localhost:11434", model: "qwen3.5:9b" }, ollamaOk: false,
     run: "claude", filter: "todo", search: "", tipHidden: false, paused: false, blind: false, contactSent: false,
     decisions: {}, events: [], live: {}, cases: {}, caseOrder: [], rules: null, rulesVersion: null,
     // not saved
@@ -435,9 +447,11 @@
   const recordedReview = (id) => (D.runs[S.run] && D.runs[S.run][id] ? D.runs[S.run][id].agent : null);
   const review = (id) => (S.live[id] ? { ...S.live[id], live: true } : recordedReview(id));
   const runModel = (k) => { const r = D.runs[k] && Object.values(D.runs[k])[0]; return r ? r.agent.model : k; };
-  const modelName = (m) => (/claude/.test(m) ? "Claude Opus 5.5" : /qwen/.test(m) ? "Qwen 3.5 9B" : m);
-  const providerName = () => (S.mode === "claude" ? "Claude Opus 5.5" : S.ollama.model);
-  const liveReady = () => (S.mode === "claude" && S.key && S.keyOk) || (S.mode === "ollama" && S.ollamaOk);
+  const modelName = (m) => (/claude/.test(m) ? "Claude Opus 5.5" : /gpt-oss-120b/.test(m) ? "gpt-oss-120b" : /qwen3\.8/.test(m) ? "Qwen 3.8 27B"
+    : /qwen/.test(m) ? "Qwen 3.5 9B" : m);
+  const providerName = () => (S.mode === "free" ? (S.claudeOut ? tx("open_name") : "Claude Opus 5.5") : S.mode === "claude" ? "Claude Opus 5.5" : S.ollama.model);
+  const liveReady = () => (S.mode === "free" && !!CFG.relay) || (S.mode === "claude" && S.key && S.keyOk) || (S.mode === "ollama" && S.ollamaOk);
+  const liveCost = () => (S.mode === "free" ? "free_cost" : S.mode === "claude" ? "analyze_cost" : "analyze_slow");
 
   let memo = null;
   function info(id) {
@@ -492,7 +506,7 @@
     const route = S.route[0] || "";
     const nav = [["", "nav_home"], ["dossiers", "nav_queue"], ["nouveau", "nav_new"], ["regles", "nav_rules"], ["pilotage", "nav_pilot"]];
     const active = route === "dossier" ? "dossiers" : route;
-    const chip = S.mode === "recorded" ? t("mode_recorded") : S.mode === "claude" ? t("mode_claude") + (S.keyOk ? t("connected") : "") : t("mode_ollama") + (S.ollamaOk ? t("connected") : "");
+    const chip = S.mode === "free" ? t("mode_free") : S.mode === "recorded" ? t("mode_recorded") : S.mode === "claude" ? t("mode_claude") + (S.keyOk ? t("connected") : "") : t("mode_ollama") + (S.ollamaOk ? t("connected") : "");
     return `<div class="topbar"><div class="wrap topbar-in"><span>${t("banner_fictional")}</span>
       <span>${t("banner_by")} <strong>${esc(CFG.author && CFG.author.name)}</strong> · <a href="${esc(CFG.author && CFG.author.linkedin)}" target="_blank" rel="noopener">${t("linkedin")}</a></span></div></div>
       <header class="appbar"><div class="wrap appbar-in">
@@ -504,7 +518,7 @@
       ${S.paused ? `<div class="notice warn wrap-notice">${icon("alert")}${t("paused_banner")}</div>` : ""}
       ${S.blind ? `<div class="notice info wrap-notice">${icon("info")}${t("blind_banner")}</div>` : ""}`;
   }
-  const footer = () => `<footer class="footer"><div class="wrap footer-in"><span>${t("footer_1")}</span><span>${t("footer_2")}</span><span>${t("footer_3")}</span><span>${t("footer_4")}</span></div></footer>`;
+  const footer = () => `<footer class="footer"><div class="wrap footer-in"><span>${t("footer_1")}</span><span>${t("footer_2")}</span><span><a href="${esc(CFG.source)}" target="_blank" rel="noopener">${t("footer_3")}</a></span><span>${t("footer_4")}</span></div></footer>`;
   const pill = (tone, iconName, text, extra = "") => `<span class="pill tone-${tone}${extra}">${iconName ? icon(iconName, 14) : ""}${text}</span>`;
   const recPill = (rec, prefix) => pill(REC_TONE[rec], REC_ICON[rec], prefix ? t(prefix, { r: pick(REC[rec]).toLowerCase() }) : esc(pick(REC[rec])));
   const statusPill = (s) => pill(STATUS_TONE[s], null, esc(pick(STATUS[s])), " small");
@@ -529,13 +543,18 @@
   }
 
   function modeSection() {
+    const key = (m) => (m === "recorded" ? "rec" : m);
+    // With the demo's relay, the no-key live mode is the one to recommend; the replay alone no longer is.
+    const tag = (m) => (m === "recorded" && CFG.relay ? "m_rec_tag_relay" : `m_${key(m)}_tag`);
     const card = (m, tone) => `<div class="card mode${S.mode === m ? " selected" : ""}">
         <label class="mode-label"><input type="radio" name="mode" value="${m}"${S.mode === m ? " checked" : ""}>
-        <span class="stack-sm"><span class="row gap-sm flexwrap"><span class="mode-title">${t(`m_${m === "recorded" ? "rec" : m}_t`)}</span>${pill(tone, null, t(`m_${m === "recorded" ? "rec" : m}_tag`), " small")}</span>
-        <span class="muted-strong">${t(`m_${m === "recorded" ? "rec" : m}_p`)}</span></span></label>
+        <span class="stack-sm"><span class="row gap-sm flexwrap"><span class="mode-title">${t(`m_${key(m)}_t`)}</span>${pill(tone, null, t(tag(m)), " small")}</span>
+        <span class="muted-strong">${t(`m_${key(m)}_p`)}</span></span></label>
         ${S.mode === m && m === "claude" ? claudeFields() : ""}${S.mode === m && m === "ollama" ? ollamaFields() : ""}</div>`;
+    const cards = CFG.relay ? card("free", "ok") + card("recorded", "neutral") + card("claude", "info") + card("ollama", "neutral")
+      : card("recorded", "ok") + card("claude", "info") + card("ollama", "neutral");
     return `<section id="mode" aria-labelledby="mode-t" class="stack"><div><h2 id="mode-t" class="h2" tabindex="-1">${t("mode_title")}</h2><p class="muted">${t("mode_sub")}</p></div>
-      <div class="grid3 start" role="radiogroup" aria-labelledby="mode-t">${card("recorded", "ok")}${card("claude", "info")}${card("ollama", "neutral")}</div></section>`;
+      <div class="${CFG.relay ? "grid4" : "grid3"} start" role="radiogroup" aria-labelledby="mode-t">${cards}</div></section>`;
   }
   const claudeFields = () => `<form class="mode-extra" data-form="key"><label for="api-key" class="label">${t("key_label")}</label>
       <div class="row gap-sm"><input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" class="input mono grow" value="${esc(S.key)}" maxlength="200">
@@ -622,7 +641,7 @@
     if (d.recommendation !== "approve") out.push(t("r_rec", { r: pick(REC[d.recommendation]).toLowerCase() }));
     else if (d.confidence < thr) out.push(t("r_conf", { c: nf(d.confidence), t: nf(thr) }));
     if (d.risk_level !== "low") out.push(t("r_risk", { r: pick(RISK_WORD[d.risk_level]) }));
-    const aiFlags = [...new Set(d.findings.filter((f) => f.status !== "ok").map((f) => checkLabel(f.check)))];
+    const aiFlags = [...new Set(d.findings.filter((f) => f.status !== "ok" && !f.by && f.check !== "instruction_scan").map((f) => checkLabel(f.check)))];
     if (aiFlags.length) out.push(t("r_ai_flag", { c: aiFlags.join(", ") }));
     const code = Object.keys(v.route.flagged).map((k) => pick(CHECK[k]));
     if (code.length) out.push(t("r_code", { c: code.join(", ") }));
@@ -672,7 +691,7 @@
     const ready = liveReady();
     return `<div class="analyze">${S.runError && S.note.case ? `<p class="form-note" role="alert">${esc(S.note.case)}</p>` : ""}
       <button type="button" class="btn primary" data-action="analyze" data-id="${esc(id)}"${ready && !S.running ? "" : " disabled"}>${t(again ? "reanalyze" : "analyze", { m: esc(providerName()) })}</button>
-      <p class="small muted">${ready ? t(S.mode === "claude" ? "analyze_cost" : "analyze_slow") : `<a href="#/mode">${t(S.mode === "claude" ? "need_key" : "need_ollama")}</a>`}</p></div>`;
+      <p class="small muted">${ready ? t(liveCost()) : `<a href="#/mode">${t(S.mode === "claude" ? "need_key" : "need_ollama")}</a>`}</p></div>`;
   }
   function liveBlock() {
     const R = S.running, steps = R.steps.map((s) => {
@@ -835,7 +854,7 @@
       <button type="button" class="icon-btn" data-action="rmdoc" data-i="${i}" aria-label="${t("remove_doc", { d: d._label || pick(DOC[d.type] || DOC.other) })}">${icon("x", 16)}</button></li>`).join("") : `<li class="muted small">${t("no_doc")}</li>`;
     const lib = LIBRARY.map(([key, , trap]) => `<li class="lib-item"><span class="h5">${esc(pick(LIB_NAME[key]))}</span>${trap ? pill("warn", null, t("trap", { t: pick(trap) }), " small") : ""}
       <button type="button" class="btn secondary small" data-lib="${key}">${t("add")}</button></li>`).join("");
-    const canUpload = S.mode === "claude" && S.keyOk;
+    const canUpload = (S.mode === "claude" && S.keyOk) || (S.mode === "free" && !!CFG.relay && !S.claudeOut);
     const live = liveReady();
     return `<div class="page-head"><div class="minw0"><h1 tabindex="-1">${t("nav_new")}</h1><p class="muted measure">${t("new_sub")}</p></div>
         <button type="button" class="btn secondary" data-action="example">${t("fill_example")}</button></div>
@@ -852,7 +871,7 @@
             <label class="btn secondary file-btn${S.uploadOk ? "" : " disabled"}">${t("choose_files")}<input type="file" id="upload-input" accept="${FILE_TYPES.join(",")}" multiple${S.uploadOk ? "" : " disabled"}></label>` : `<p class="small muted"><a href="#/mode">${t("upload_needs_claude")}</a></p>`}
             ${S.note.upload ? `<p class="form-note" role="status">${esc(S.note.upload)}</p>` : ""}</div></section></div>
       <aside class="split-side stack"><section class="card decision stack-sm" aria-labelledby="s3"><h2 id="s3" class="h3 row gap-sm"><span class="num sm" aria-hidden="true">3</span>${t("s_run")}</h2>
-          <p class="body">${live ? t(S.mode === "claude" ? "analyze_cost" : "analyze_slow") : t("create_note_rec")}</p>${note("newcase")}
+          <p class="body">${live ? t(liveCost()) : t("create_note_rec")}</p>${note("newcase")}
           <button type="button" class="btn primary big" data-action="create"${S.running ? " disabled" : ""}>${live ? t("create_run") : t("create_only")}</button></section>
         <section class="card stack-sm"><h2 class="h4 row gap-sm">${icon("shield", 18)}${t("sec_title")}</h2><ul class="small-list"><li>${t("sec_1")}</li><li>${t("sec_2")}</li><li>${t("sec_3")}</li></ul></section></aside></div>`;
   }
@@ -1030,13 +1049,17 @@
   function providerMessage(e) {
     const m = String(e.message || "");
     if (m === "key") return tx("e_key");
-    if (m === "rate") return tx("e_rate");
+    if (m === "rate") return tx(S.mode === "free" ? "e_busy" : "e_rate");
+    if (m === "unavailable") return tx("e_unavailable");
+    if (m === "refused") return tx("e_refused");
+    if (m === "too_large") return tx("e_too_large");
     if (m === "network") return tx("e_network");
     if (m === "unreadable") return tx("e_unreadable");
     if (m.startsWith("ollama")) return tx("e_ollama", { o: location.origin });
     return tx("e_api", { m: m.replace(/^api:/, "") });
   }
   function provider() {
+    if (S.mode === "free") return S.claudeOut ? { kind: "open", relay: CFG.relay } : { kind: "claude", relay: CFG.relay };
     return S.mode === "claude" ? { kind: "claude", key: S.key } : { kind: "ollama", url: S.ollama.url, model: S.ollama.model };
   }
   let tick = null;
@@ -1046,9 +1069,15 @@
     S.running = { id, steps: [], ac, start: Date.now() }; S.runError = ""; S.note.case = "";
     render();
     tick = setInterval(() => { const el = document.getElementById("live-elapsed"); if (el && S.running) el.textContent = `${Math.round((Date.now() - S.running.start) / 1000)} s`; }, 1000);
+    const run = () => KYC.reviewApplication({ ctx: ctx(), id, lang: S.lang, provider: provider(), policy: policyText(), version: version(),
+      threshold: threshold(), signal: ac.signal, onStep: (s) => { if (S.running) { S.running.steps.push(s); render(); } } });
     try {
-      const r = await KYC.reviewApplication({ ctx: ctx(), id, lang: S.lang, provider: provider(), policy: policyText(), version: version(),
-        threshold: threshold(), signal: ac.signal, onStep: (s) => { if (S.running) { S.running.steps.push(s); render(); } } });
+      let r;
+      try { r = await run(); } catch (e) {
+        // The author's Claude budget for the month is spent: the same review goes to the free open model.
+        if (!(S.mode === "free" && !S.claudeOut && e.message === "unavailable")) throw e;
+        S.claudeOut = true; S.running.steps = []; toast(tx("free_fallback")); r = await run();
+      }
       S.live[id] = r;
       addEvent("ai", id, tx("ev_review", { m: modelName(r.model), r: pick(REC[r.decision.recommendation]).toLowerCase(), risk: pick(RISK_WORD[r.decision.risk_level]), c: nf(r.decision.confidence) }));
       save();
@@ -1109,21 +1138,35 @@
     location.hash = `#/dossier/${id}`;
     if (liveReady()) analyze(id);
   }
+  // Photos are reduced to 1,600 px before they leave the browser: enough to read a document, and a smaller payload.
+  async function shrink(file) {
+    if (!file.type.startsWith("image/") || file.type === "image/gif") return { type: file.type, blob: file };
+    const bmp = await createImageBitmap(file), scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale); canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    return { type: "image/jpeg", blob: await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.85)) };
+  }
   async function readUploads(files) {
     const dr = S.draft;
     for (const file of files) {
       if (dr.files >= LIMITS.files) { S.note.upload = tx("too_many_files"); break; }
       if (!FILE_TYPES.includes(file.type)) { S.note.upload = tx("bad_file", { f: file.name }); continue; }
-      if (file.size > LIMITS.fileBytes) { S.note.upload = tx("big_file", { f: file.name }); continue; }
+      const viaRelay = S.mode === "free";
+      if (file.size > (viaRelay && file.type === "application/pdf" ? LIMITS.relayPdfBytes : LIMITS.fileBytes)) { S.note.upload = tx("big_file", { f: file.name }); continue; }
       S.note.upload = tx("reading", { f: file.name }); render();
       try {
-        const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(file); });
-        const { doc, usage } = await KYC.extractDocument({ key: S.key, mediaType: file.type, base64 });
+        const { type, blob } = await shrink(file);
+        const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
+        const { doc, usage } = await KYC.extractDocument({ target: viaRelay ? { relay: CFG.relay } : { key: S.key }, mediaType: type, base64 });
         doc._upload = true; doc._label = `${pick(DOC[doc.type] || DOC.other)} · ${file.name.slice(0, 40)}`;
         dr.documents.push(doc); dr.files++;
         if (file.type.startsWith("image/")) S.uploads[`draft:${dr.documents.length - 1}`] = URL.createObjectURL(file);
         S.note.upload = `${tx("read_done", { f: file.name, t: pick(DOC[doc.type] || DOC.other) })}${doc.addressed_text ? ` ${tx("addressed")}` : ""} (${money(usage.cost_usd || 0)})`;
-      } catch (e) { S.note.upload = `${file.name} : ${providerMessage(e)}`; }
+      } catch (e) {
+        if (viaRelay && e.message === "unavailable") S.claudeOut = true; // the open models cannot read documents
+        S.note.upload = `${file.name} : ${providerMessage(e)}`;
+      }
       render();
     }
   }
