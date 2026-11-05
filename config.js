@@ -8,6 +8,7 @@ window.KYC_CONFIG = {
   relay: "https://kyc-demo-relay.kyc-demo-relay.workers.dev",
   // true once the relay also has a free open model (GROQ_API_KEY), used when the Claude cap is reached.
   relayOpenModel: false,
-  source: "https://github.com/koudadjekossiprospere/kyc-onboarding-agent",
+  // Link to the source code from the footer, if the repository is public. null: "Code source privé".
+  source: null,
   author: { name: "Koudadje Kossi Prospere", linkedin: "https://www.linkedin.com/in/prosp%C3%A8re-koudadje" },
 };

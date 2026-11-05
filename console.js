@@ -36,7 +36,7 @@
     blind_banner: ["Mode étude : l'avis de l'IA est masqué, et le temps passé sur chaque dossier est mesuré.", "Study mode: the AI's opinion is hidden and the time spent on each case is measured."],
     footer_1: ["Données 100 % fictives · pièces marquées SPECIMEN", "100% fictional data · documents marked SPECIMEN"],
     footer_2: ["Vérification d'identité (PVID) simulée", "Identity verification (PVID) simulated"],
-    footer_3: ["Code source ouvert sur GitHub", "Open source code on GitHub"],
+    footer_3: ["Code source ouvert sur GitHub", "Open source code on GitHub"], footer_3_private: ["Code source privé", "Private source code"],
     footer_4: ["Inspiré du World Cloud Report – Financial Services 2026 de Capgemini", "Inspired by Capgemini's World Cloud Report – Financial Services 2026"],
     loading: ["Chargement…", "Loading…"],
     load_error: ["Les données de la démo n'ont pas pu être chargées.", "The demo data could not be loaded."],
@@ -521,7 +521,7 @@
       ${S.paused ? `<div class="notice warn wrap-notice">${icon("alert")}${t("paused_banner")}</div>` : ""}
       ${S.blind ? `<div class="notice info wrap-notice">${icon("info")}${t("blind_banner")}</div>` : ""}`;
   }
-  const footer = () => `<footer class="footer"><div class="wrap footer-in"><span>${t("footer_1")}</span><span>${t("footer_2")}</span><span><a href="${esc(CFG.source)}" target="_blank" rel="noopener">${t("footer_3")}</a></span><span>${t("footer_4")}</span></div></footer>`;
+  const footer = () => `<footer class="footer"><div class="wrap footer-in"><span>${t("footer_1")}</span><span>${t("footer_2")}</span><span>${CFG.source ? `<a href="${esc(CFG.source)}" target="_blank" rel="noopener">${t("footer_3")}</a>` : t("footer_3_private")}</span><span>${t("footer_4")}</span></div></footer>`;
   const pill = (tone, iconName, text, extra = "") => `<span class="pill tone-${tone}${extra}">${iconName ? icon(iconName, 14) : ""}${text}</span>`;
   const recPill = (rec, prefix) => pill(REC_TONE[rec], REC_ICON[rec], prefix ? t(prefix, { r: pick(REC[rec]).toLowerCase() }) : esc(pick(REC[rec])));
   const statusPill = (s) => pill(STATUS_TONE[s], null, esc(pick(STATUS[s])), " small");
