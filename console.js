@@ -271,13 +271,17 @@
     pause: ["Suspendre les approbations automatiques", "Pause automatic approvals"], resume: ["Reprendre les approbations automatiques", "Resume automatic approvals"],
     kill_reason: ["Motif", "Reason"], kill_reason_ph: ["Ex. : mise à jour du modèle en cours de vérification", "E.g. model update under review"],
     perf_title: ["Les deux IA, sur les mêmes dossiers", "The two AIs, on the same cases"],
+    per_case_title: ["Dossier par dossier", "Case by case"],
+    per_case_p: ["La réponse attendue de chaque dossier a été écrite avant de lancer les IA. En vert, l'IA a donné une réponse attendue ; en rouge, non.", "Each case's expected answer was written before the AIs ran. Green: the AI gave an expected answer; red: it did not."],
+    c_case: ["Dossier", "Case"], c_tests: ["Ce qu'il teste", "What it tests"], c_expected: ["Réponse attendue", "Expected answer"],
+    not_tested: ["non testé", "not tested"], auto_short: ["approuvé sans humain", "approved without a human"],
     perf_p: ["Réponses attendues écrites et enregistrées avant de lancer les IA, pour ne pas ajuster la grille aux résultats.", "Expected answers written and recorded before the AIs ran, so the grid could not be fitted to the results."],
-    c_model: ["Modèle", "Model"], c_right: ["Bien orientés", "Routed correctly"], c_wrong: ["Approuvés sans humain à tort", "Wrongly approved without a human"],
+    c_model: ["Modèle", "Model"], c_right: ["Bonnes décisions", "Right decisions"], c_wrong: ["Approuvés sans humain à tort", "Wrongly approved without a human"],
     c_clean: ["Dossiers propres validés seuls", "Clean cases cleared alone"], c_time: ["Temps médian", "Median time"], c_cost: ["Coût", "Cost"],
     of: ["{a} sur {b}", "{a} out of {b}"], claude_sub: ["API Anthropic", "Anthropic API"], qwen_sub: ["gratuit, sur l'ordinateur (Ollama)", "free, on the computer (Ollama)"],
-    cost_total: ["{c} les {n}", "{c} for {n}"], cost_avg: ["environ {c} par dossier", "about {c} per case"], wrong_fixed: ["{n}, corrigé depuis", "{n}, fixed since"],
+    cost_total: ["{c} les {n}", "{c} for {n}"], cost_avg: ["environ {c} par dossier", "about {c} per case"], wrong_fixed: ["{n} (faille corrigée dans le code)", "{n} (flaw fixed in code)"],
     qwen_err_t: ["L'erreur grave, et sa correction", "The serious error, and its fix"],
-    qwen_err_p: ["APP-012 : Qwen n'a pas vu la consigne cachée dans un justificatif et a approuvé. Depuis, le code cherche lui-même ces consignes et escalade le dossier, quel que soit l'avis de l'IA. Revérifié sur les 2 dossiers piégés : 2 sur 2.",
+    qwen_err_p: ["APP-012 : Qwen n'a pas vu la consigne cachée dans un justificatif et a approuvé. Depuis, le code cherche lui-même ces consignes et transmet le dossier à un analyste, quel que soit l'avis de l'IA. Revérifié sur les 2 dossiers piégés : 2 sur 2.",
       "APP-012: Qwen missed the instruction hidden in a document and approved. Since then, the code looks for such instructions itself and escalates the case, whatever the AI says. Re-checked on the 2 trapped cases: 2 out of 2."],
     qwen_other_t: ["Ses autres écarts", "Its other gaps"],
     qwen_other_p: ["{list}. Tous sont passés par un humain : aucun n'a été approuvé sans relecture.", "{list}. All went through a human: none was approved without review."],
@@ -323,7 +327,7 @@
     check_remote_verification: ["Vérification à distance", "Remote verification"], check_document_security: ["Sécurité du document", "Document security"],
     instruction_scan: ["Consignes cachées", "Hidden instructions"],
   };
-  const REC = { approve: ["Approuver", "Approve"], request_documents: ["Demander des pièces", "Request documents"], reject: ["Refuser", "Reject"], escalate: ["Escalader à un humain", "Escalate to a human"] };
+  const REC = { approve: ["Approuver", "Approve"], request_documents: ["Demander des pièces", "Request documents"], reject: ["Refuser", "Reject"], escalate: ["Transmettre à un analyste", "Send to an analyst"] };
   const RISK = { low: ["Risque faible", "Low risk"], medium: ["Risque moyen", "Medium risk"], high: ["Risque élevé", "High risk"] };
   const RISK_WORD = { low: ["faible", "low"], medium: ["moyen", "medium"], high: ["élevé", "high"] };
   const STATUS = { ok: ["Conforme", "Pass"], warning: ["À vérifier", "Check"], fail: ["Alerte", "Alert"] };
@@ -960,6 +964,7 @@
         <div class="table"><table><thead><tr><th scope="col">${t("c_model")}</th><th scope="col">${t("c_right")}</th><th scope="col">${t("c_wrong")}</th><th scope="col">${t("c_clean")}</th><th scope="col">${t("c_time")}</th><th scope="col">${t("c_cost")}</th></tr></thead><tbody>${rows}</tbody></table></div>
         ${q ? `<div class="grid2"><div class="panel tone-fail-bg"><h3 class="h4">${t("qwen_err_t")}</h3><p class="small">${t("qwen_err_p")}</p></div>
           <div class="panel"><h3 class="h4">${t("qwen_other_t")}</h3><p class="small">${t("qwen_other_p", { list: gaps })}</p></div></div><p class="small muted">${t("qwen_scope")}</p>` : ""}</section>
+      ${caseTable()}
       <div class="grid2 stretch"><section class="card stack-sm" aria-labelledby="study-t"><h2 id="study-t" class="h3">${t("study_title")}</h2><p class="body">${t("study_p")}</p>
           <dl class="kpis">${kpi("with_ai", avg(true))}${kpi("without_ai", avg(false))}</dl><p class="small muted">${t("mckinsey")}</p>
           <button type="button" class="btn secondary" data-action="blind">${t(S.blind ? "study_off" : "study_on")}</button></section>
@@ -967,6 +972,22 @@
           <dl class="kpis">${kpi("k_decisions", decided.length)}${kpi("k_disagree", disagree)}${kpi("k_rules", ruleChanges)}${kpi("k_cases", S.caseOrder.length)}${kpi("k_live", Object.keys(S.live).length)}</dl>
           <button type="button" class="btn primary big" data-action="report">${icon("dl", 18)}${t("download")}</button><button type="button" class="btn link danger-text" data-action="wipe">${t("wipe")}</button></section></div>
       ${auditSection()}`;
+  }
+  // Every test case with its expected answer, fixed before the runs, and what each model recommended.
+  function caseTable() {
+    if (S.blind) return ""; // it shows the AI's opinions
+    const runs = Object.keys(D.runs), thr = D.ctx.rules.auto_approval_min_confidence, or = S.lang === "fr" ? " ou " : " or ";
+    const cell = (k, id) => {
+      const r = D.runs[k][id];
+      if (!r) return `<td class="muted small">${t("not_tested")}</td>`;
+      const d = r.agent.decision, ok = D.expected[id].allowed.includes(d.recommendation);
+      return `<td>${pill(ok ? "ok" : "fail", ok ? "check" : "x", esc(pick(REC[d.recommendation])), " small")}${KYC.needsHuman(d, thr) ? "" : `<span class="cell-sub">${t("auto_short")}</span>`}</td>`;
+    };
+    const rows = Object.keys(D.expected).map((id) => `<tr><td class="mono nowrap"><a href="#/dossier/${esc(id)}">${esc(id)}</a></td>
+      <td>${esc(D.expected[id].case)}</td><td>${esc(D.expected[id].allowed.map((a) => pick(REC[a])).join(or))}</td>${runs.map((k) => cell(k, id)).join("")}</tr>`).join("");
+    return `<section class="card stack-sm" aria-labelledby="cases-t"><div><h2 id="cases-t" class="h3">${t("per_case_title")}</h2><p class="small muted">${t("per_case_p")}</p></div>
+      <div class="table"><table><thead><tr><th scope="col">${t("c_case")}</th><th scope="col">${t("c_tests")}</th><th scope="col">${t("c_expected")}</th>
+      ${runs.map((k) => `<th scope="col">${esc(modelName(runModel(k)))}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div></section>`;
   }
   function countRuleChanges() {
     const base = D.policy_parts.rules, list = ruleList();
