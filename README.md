@@ -1,13 +1,22 @@
 # KYC onboarding agent · public demo
 
-A web replay of the supervision console of an AI agent that reviews bank account openings (KYC).
-The agent's reviews were computed in advance on fictional applications, with Claude Opus 5.5 and with
-Qwen 3.5 9B run locally. Your decisions, the stop button and the study mode work in your browser tab only.
+A web demo of an AI agent that reviews bank account openings (KYC) under human supervision, on fictional data.
 
-Everything shown is fictional: applicants, documents and watchlist entries. This repository holds only the
-published page; the agent's source code is private.
+- **Recorded results**: the real answers of Claude Opus 5.5 (26 test cases) and Qwen 3.5 9B (24 cases), scored
+  against expected answers fixed before the runs.
+- **Live review with your own Claude key**: the key stays in your browser tab's memory and goes only to
+  api.anthropic.com. Claude reads the documents you upload; the code checks their machine-readable zone (MRZ).
+- **Live review with your own Ollama**: Qwen runs on your computer, nothing leaves it.
+- **Editable rules**: change the thresholds, edit, delete or add rules, and see which cases change. Your changes stay
+  in your browser. The safeguards are in the code and no rule can switch them off: an approval skips the human only
+  if all six checks pass in the code's own results, and any text addressed to the AI escalates the case.
+
+Everything shown is fictional: applicants, documents (marked SPECIMEN) and watchlist entries. Identity verification
+by a certified provider (PVID) is simulated. This repository holds only the published page; the agent's source code
+is private.
 
 ---
 
-Démo publique de la console de supervision d'un agent d'IA qui examine les ouvertures de compte (KYC).
-Les examens de l'agent ont été calculés à l'avance sur des dossiers fictifs. Le code source de l'agent est privé.
+Démo publique d'un agent d'IA qui examine les ouvertures de compte (KYC) sous supervision humaine, sur des dossiers
+fictifs : résultats enregistrés, analyse en direct avec votre propre clé Claude ou votre Ollama, règles modifiables.
+Le code source de l'agent est privé.
